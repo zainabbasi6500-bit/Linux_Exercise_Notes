@@ -1,0 +1,115 @@
+sudo systemctl daemon-reload => systemd restart
+sudo systemctl start webwatch.service => try starting webwatch service
+	gives error: 
+		Failed to start webwatch.service: Unit webwatch.service has a bad unit file setting.
+		See system logs and 'systemctl status webwatch.service' for details.
+	meaning: unit file has bad setting
+	unit file => /etc/systemd/system/webwatch.service (need to edit)
+sudo nano /etc/systemd/system/webwatch.service
+	bad file setting content:
+		[Unit]
+		Description=Ping Google Every Minute
+		After=network-online.target
+
+		[Service]
+		ExecStart=~/webwatch/pinger.sh  => not full path 
+		Restart=onfail => bad keyword
+		User=zain
+
+		[Install]
+		WantedBy=multi-user.target
+	correct file setting content:
+		[Unit]
+		Description=Ping Google Every Minute
+		After=network-online.target
+
+		[Service]
+		ExecStart=/home/zain/webwatch/pinger.sh => correct full path
+		Restart=on-failure => correct keyword
+		User=zain
+
+		[Install]
+		WantedBy=multi-user.target
+ctrl+x, y, enter to save unit file
+sudo sytemctl daemon-reload => (reload systemd everytime unit file change)
+sudo systemctl start webwatch.service => start service again
+sudo systemctl status webwatch.service => check service status
+	status shows error:
+		× webwatch.service - Ping Google Every Minute
+		     Loaded: loaded (/etc/systemd/system/webwatch.service; disabled; preset: disabled)
+		     Active: failed (Result: exit-code) since Sat 2025-09-20 05:56:40 EDT; 21s ago
+		   Duration: 30ms
+		 Invocation: 56a841caa6d64ab9a39f505d003a8f50
+		    Process: 39715 ExecStart=/home/zain/webwatch/pinger.sh (code=exited, status=203/EXEC)
+		   Main PID: 39715 (code=exited, status=203/EXEC)
+
+		Sep 20 05:56:40 kali systemd[1]: webwatch.service: Scheduled restart job, restart counter is at 5.
+		Sep 20 05:56:40 kali systemd[1]: webwatch.service: Start request repeated too quickly.
+		Sep 20 05:56:40 kali systemd[1]: webwatch.service: Failed with result 'exit-code'.
+		Sep 20 05:56:40 kali systemd[1]: Failed to start webwatch.service - Ping Google Every Minute.
+analyse pinger.sh file because something is wrong as shown in error:
+sudo nano ~/webwatch/pinger.sh 
+	bad file content:
+		#!/bin/bash
+		while true; do
+			ping -c 1 google.comm >> /home/zain/webwatch/ping.log => bad name (.comm => .com)
+			slep 60 => bad keyword (slep => sleep)
+		done
+
+	correct file content:
+		#!/bin/bash
+		while true; do
+			ping -c 1 google.com >> /home/zain/webwatch/ping.log
+			sleep 60
+		done
+ctrl+x, y, enter to save and exit
+
+sudo systemctl start webwatch.service => start again
+sudo systemctl status webwatch.service => check status
+	gives error still:
+		× webwatch.service - Ping Google Every Minute
+	     Loaded: loaded (/etc/systemd/system/webwatch.service; disabled; preset: disabled)
+	     Active: failed (Result: exit-code) since Sat 2025-09-20 06:00:19 EDT; 17s ago
+	   Duration: 26ms
+	 Invocation: 3da7380c9c7f4d11b48bef1850d88941
+	    Process: 41505 ExecStart=/home/zain/webwatch/pinger.sh (code=exited, status=203/EXEC)
+	   Main PID: 41505 (code=exited, status=203/EXEC)
+
+	Sep 20 06:00:19 kali systemd[1]: webwatch.service: Scheduled restart job, restart counter is at 5.
+	Sep 20 06:00:19 kali systemd[1]: webwatch.service: Start request repeated too quickly.
+	Sep 20 06:00:19 kali systemd[1]: webwatch.service: Failed with result 'exit-code'.
+	Sep 20 06:00:19 kali systemd[1]: Failed to start webwatch.service - Ping Google Every Minute.
+
+ls -l webwatch => check if file has permissions or not
+	-rw-r--r-- 1 root root 97 Sep 20 05:59 pinger.sh => file can not be executed
+chmod 764 ~/webwatch/pinger.sh => give execution permission to file
+sudo systemctl daemon-reload => systemd reload
+sudo systemctl start webwatch.service => start service webwatch
+sudo systemctl status webwatch.service => check status of webwatch
+	no error as service is now active:
+		● webwatch.service - Ping Google Every Minute
+	     Loaded: loaded (/etc/systemd/system/webwatch.service; disabled; preset: disabled)
+	     Active: active (running) since Sat 2025-09-20 06:09:46 EDT; 4s ago
+	 Invocation: 702f686d2b124e159b8f53d68209a946
+	   Main PID: 46262 (pinger.sh)
+	      Tasks: 2 (limit: 3414)
+	     Memory: 740K (peak: 1.9M)
+		CPU: 18ms
+	     CGroup: /system.slice/webwatch.service
+		     ├─46262 /bin/bash /home/zain/webwatch/pinger.sh
+		     └─46264 sleep 60
+
+	Sep 20 06:09:46 kali systemd[1]: Started webwatch.service - Ping Google Every Minute.
+
+
+
+
+
+
+
+
+
+
+
+
+

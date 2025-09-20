@@ -1,0 +1,31 @@
+cd ~ => move to home directory
+mkdir services => create services directory
+touch hello_service.sh => create file named hello_service.sh
+nano ~/services/hello_service.sh => edit file
+	file content:
+		#!/bin/bash
+		while true; do
+			echo "Hello from systemd service! $(date)" >> /home/zain/services/hello.log
+			sleep 30
+		done
+ctrl+x, y, enter to save
+chmod 764 ~/services/hello_service.sh => make file executable
+nano /etc/systemd/system/hello.service => create systemd unit file
+	file content:
+		[Unit]
+		Description=Hello service example
+		After=network.target
+
+
+		[Service]
+		ExecStart=/home/zain/services/hello_service.sh
+		Restart=always
+
+
+		[Install]
+		WantedBy=multi-user.target
+sudo systemctl daemon-reload => reload systemd (registers new service)
+sudo systemctl start hello.service => start the new service
+sudo systemctl status hello.service => check status of new service
+sudo systemctl enable hello.service => enable new service (why?)
+tail -f ~/services/hello.log => view logs
