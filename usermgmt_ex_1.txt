@@ -1,0 +1,59 @@
+sudo adduser alice (password: 123) 
+	everything else default
+sudo adduser bob (password: 123)
+	everything else default
+cat /etc/passwd => check if user created or not
+sudo groupadd devteam => create new group
+adding users to devteam group:
+	sudo usermod -aG devteam alice
+	sudo usermod -aG devteam bob
+cat /etc/group => check group
+create project in /srv (public srv directory):
+	mkdir /srv/project
+give group access to project and also give rwx permissions:
+	sudo chown :devteam /srv/project
+	sudo chmod 770 /srv/project
+switch to alice:
+	su - alice
+	edit bashrc:
+		nano ~/.bashrc
+			add alias gotoproj='cd /srv/project'
+		source ~/.bashrc (reload bash)
+		gotoproj (check if command works)
+switch to bob:
+	su - bob
+	edit bashrc:
+		nano ~/.bashrc
+			add alias gotoproj='cd /srv/project'
+		source ~/.bashrc (reload bash)
+		gotoproj (check if command works)
+switch back to alice:
+	gotoproj
+	touch alice_notes.txt (Create new file)
+	nano alice_notes.txt (add dummytext and save file)
+switch to bob:
+	gotoproj
+	ls (view files to see if alice_notes.txt is visible)
+	cat alice_notes.txt (check to see if text can be viewed)
+	nano alice_notes.txt (try and edit, if permission denied then bob currently doesnot have permission meaning no user other than alice can edit the file, need to give permissions to all group members to be able to edit file)			
+switch back to admin (zain in this case):
+	su - zain
+	sudo chmod g+s /srv/project (all new files inherit devteam group, now everyone in devteam group should have access to new files)
+to test new access switch to bob:
+	su - bob
+	gotoproj (go to /srv/project)
+	touch bobfile.txt (create new file)
+	nano bobfile.txt (add dummytext and save)
+switch to alice:
+	su - alice
+	gotoproj (go to /srv/project)
+	ls (see if files are visible)
+	cat bobfile.txt (check if text can be viewed)
+	nano bobfile.txt (edit to see if permissions are working)
+
+This exercise allows us to practice:
+	- managing users
+	- managing groups
+	- creating/managing permissions
+	- adding aliases
+	- troubleshooting access issues
